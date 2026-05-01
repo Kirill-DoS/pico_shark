@@ -14,9 +14,21 @@ extern "C" {
 extern void ui_Screen1_screen_init(void);
 extern void ui_Screen1_screen_destroy(void);
 extern lv_obj_t * ui_Screen1;
+extern lv_obj_t * ui_Panel6;
 extern lv_obj_t * ui_Roller1;
+extern lv_obj_t * ui_Panel9;
+extern lv_obj_t * ui_Panel8;
 extern lv_obj_t * ui_BatteryBar;
+extern lv_obj_t * ui_MainInfoLabel;
+extern lv_obj_t * ui_DataGrid;
+extern lv_obj_t * ui_TempLabel;
+extern lv_obj_t * ui_TempValLabel;
+extern lv_obj_t * ui_HumLabel;
+extern lv_obj_t * ui_HumValLabel;
+extern lv_obj_t * ui_PressLabel;
+extern lv_obj_t * ui_PressValLabel;
 // CUSTOM VARIABLES
+extern lv_obj_t * uic_Screen1;
 
 #ifdef __cplusplus
 } /*extern "C"*/
