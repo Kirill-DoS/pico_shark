@@ -1,0 +1,37 @@
+lvgl/CMakeFiles/lvgl.dir/src/extra/libs/gif/gifdec.c.o: \
+ /home/arch/pico/pico_shark/lvgl/src/extra/libs/gif/gifdec.c \
+ /home/arch/pico/pico_shark/lvgl/src/extra/libs/gif/gifdec.h \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/stdint.h \
+ /usr/arm-none-eabi/include/stdint.h \
+ /usr/arm-none-eabi/include/machine/_default_types.h \
+ /usr/arm-none-eabi/include/sys/features.h \
+ /usr/arm-none-eabi/include/_newlib_version.h \
+ /usr/arm-none-eabi/include/sys/_intsup.h \
+ /usr/arm-none-eabi/include/sys/_stdint.h \
+ /home/arch/pico/pico_shark/lvgl/src/extra/libs/gif/../../../misc/lv_fs.h \
+ /home/arch/pico/pico_shark/lvgl/src/extra/libs/gif/../../../misc/../lv_conf_internal.h \
+ /home/arch/pico/pico_shark/lvgl/src/extra/libs/gif/../../../misc/../lv_conf_kconfig.h \
+ /home/arch/pico/pico_shark/lvgl/lv_conf.h \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/stdbool.h \
+ /home/arch/pico/pico_shark/lvgl/src/extra/libs/gif/../../../misc/lv_log.h \
+ /home/arch/pico/pico_shark/lvgl/src/extra/libs/gif/../../../misc/lv_types.h \
+ /home/arch/pico/pico_shark/lvgl/src/extra/libs/gif/../../../misc/lv_mem.h \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/stddef.h \
+ /usr/arm-none-eabi/include/string.h /usr/arm-none-eabi/include/_ansi.h \
+ /usr/arm-none-eabi/include/newlib.h \
+ /usr/arm-none-eabi/include/sys/config.h \
+ /usr/arm-none-eabi/include/machine/ieeefp.h \
+ /usr/arm-none-eabi/include/sys/reent.h \
+ /usr/arm-none-eabi/include/_ansi.h \
+ /usr/arm-none-eabi/include/sys/cdefs.h \
+ /usr/arm-none-eabi/include/sys/_types.h \
+ /usr/arm-none-eabi/include/machine/_types.h \
+ /usr/arm-none-eabi/include/sys/lock.h \
+ /usr/arm-none-eabi/include/sys/_locale.h \
+ /usr/arm-none-eabi/include/strings.h \
+ /usr/arm-none-eabi/include/sys/string.h \
+ /home/arch/pico/pico_shark/lvgl/src/extra/libs/gif/../../../misc/lv_color.h \
+ /home/arch/pico/pico_shark/lvgl/src/extra/libs/gif/../../../misc/lv_assert.h \
+ /home/arch/pico/pico_shark/lvgl/src/extra/libs/gif/../../../misc/lv_log.h \
+ /home/arch/pico/pico_shark/lvgl/src/extra/libs/gif/../../../misc/lv_mem.h \
+ /home/arch/pico/pico_shark/lvgl/src/extra/libs/gif/../../../misc/lv_math.h

@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/arch/pico/pico_shark/build/_deps/picotool-build/enc_bootloader_mbedtls/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

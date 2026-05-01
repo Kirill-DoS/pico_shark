@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/arch/pico/pico_shark/build/pioasm/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
