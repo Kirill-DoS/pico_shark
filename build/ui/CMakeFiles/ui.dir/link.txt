@@ -1,2 +1,0 @@
-/usr/bin/arm-none-eabi-ar qc libui.a CMakeFiles/ui.dir/screens/ui_Screen1.c.o CMakeFiles/ui.dir/ui.c.o CMakeFiles/ui.dir/components/ui_comp_hook.c.o CMakeFiles/ui.dir/ui_helpers.c.o
-/usr/bin/arm-none-eabi-ranlib libui.a

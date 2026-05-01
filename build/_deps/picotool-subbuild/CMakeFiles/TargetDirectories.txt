@@ -1,3 +1,0 @@
-/home/arch/pico/pico_shark/build/_deps/picotool-subbuild/CMakeFiles/picotool-populate.dir
-/home/arch/pico/pico_shark/build/_deps/picotool-subbuild/CMakeFiles/edit_cache.dir
-/home/arch/pico/pico_shark/build/_deps/picotool-subbuild/CMakeFiles/rebuild_cache.dir

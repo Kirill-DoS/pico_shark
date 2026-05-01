@@ -1,2 +1,0 @@
-/home/arch/pico/pico_shark/build/_deps/picotool-build/enc_bootloader_mbedtls/CMakeFiles/edit_cache.dir
-/home/arch/pico/pico_shark/build/_deps/picotool-build/enc_bootloader_mbedtls/CMakeFiles/rebuild_cache.dir

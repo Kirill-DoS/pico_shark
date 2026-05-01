@@ -1,7 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/home/arch/pico/pico_shark/build/_deps/picotool-subbuild/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

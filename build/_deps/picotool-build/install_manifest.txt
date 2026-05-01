@@ -1,7 +1,0 @@
-/home/arch/pico/pico_shark/build/_deps/picotool/picotool
-/home/arch/pico/pico_shark/build/_deps/picotool/picotoolTargets.cmake
-/home/arch/pico/pico_shark/build/_deps/picotool/picotoolTargets-release.cmake
-/home/arch/pico/pico_shark/build/_deps/picotool/picotoolConfig.cmake
-/home/arch/pico/pico_shark/build/_deps/picotool/picotoolConfigVersion.cmake
-/home/arch/pico/pico_shark/build/_deps/picotool/enc_bootloader.elf
-/home/arch/pico/pico_shark/build/_deps/picotool/enc_bootloader_mbedtls.elf
