@@ -65,7 +65,7 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_scroll_dir(ui_uiMenuCarousel, LV_DIR_HOR);
     lv_obj_set_scroll_snap_x(ui_uiMenuCarousel, LV_SCROLL_SNAP_CENTER);
 
-    ui_uiHomePanel = lv_obj_create(ui_Screen1);
+    ui_uiHomePanel = lv_obj_create(ui_uiMenuCarousel);
     lv_obj_set_width(ui_uiHomePanel, 320);
     lv_obj_set_height(ui_uiHomePanel, 240);
     lv_obj_set_x(ui_uiHomePanel, 0);
@@ -257,7 +257,7 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_style_text_color(ui_PressValLabel, lv_color_hex(0x00D9FF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_PressValLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_uiRFIDPanel = lv_obj_create(ui_Screen1);
+    ui_uiRFIDPanel = lv_obj_create(ui_uiMenuCarousel);
     lv_obj_set_width(ui_uiRFIDPanel, 320);
     lv_obj_set_height(ui_uiRFIDPanel, 240);
     lv_obj_set_align(ui_uiRFIDPanel, LV_ALIGN_CENTER);
@@ -354,9 +354,11 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_align(ui_OffLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_OffLabel, "turn off");
 
-    ui_uiWiFiPanel = lv_obj_create(ui_Screen1);
+    ui_uiWiFiPanel = lv_obj_create(ui_uiMenuCarousel);
     lv_obj_set_width(ui_uiWiFiPanel, 320);
     lv_obj_set_height(ui_uiWiFiPanel, 240);
+    lv_obj_set_x(ui_uiWiFiPanel, 4);
+    lv_obj_set_y(ui_uiWiFiPanel, 0);
     lv_obj_set_align(ui_uiWiFiPanel, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_uiWiFiPanel, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_uiWiFiPanel, lv_color_hex(0x0E002E), LV_PART_MAIN | LV_STATE_DEFAULT);
