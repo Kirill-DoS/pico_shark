@@ -70,7 +70,6 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_x(ui_uiHomePanel, 0);
     lv_obj_set_y(ui_uiHomePanel, -2);
     lv_obj_set_align(ui_uiHomePanel, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_uiHomePanel, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_clear_flag(ui_uiHomePanel, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_uiHomePanel, lv_color_hex(0x0E002E), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_uiHomePanel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -261,7 +260,6 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_width(ui_uiRFIDPanel, lv_pct(100));
     lv_obj_set_height(ui_uiRFIDPanel, lv_pct(100));
     lv_obj_set_align(ui_uiRFIDPanel, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_uiRFIDPanel, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_clear_flag(ui_uiRFIDPanel, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_uiRFIDPanel, lv_color_hex(0x0E002E), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_uiRFIDPanel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
