@@ -52,17 +52,19 @@ void ui_Screen1_screen_init(void)
 {
     ui_Screen1 = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_Screen1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_scroll_dir(ui_Screen1, LV_DIR_VER);
+    lv_obj_set_scroll_snap_x(ui_Screen1, LV_SCROLL_SNAP_CENTER);
 
     ui_uiMenuCarousel = lv_obj_create(ui_Screen1);
     lv_obj_remove_style_all(ui_uiMenuCarousel);
     lv_obj_set_width(ui_uiMenuCarousel, 320);
     lv_obj_set_height(ui_uiMenuCarousel, 240);
     lv_obj_set_align(ui_uiMenuCarousel, LV_ALIGN_CENTER);
-    lv_obj_set_flex_flow(ui_uiMenuCarousel, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_flow(ui_uiMenuCarousel, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(ui_uiMenuCarousel, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_add_flag(ui_uiMenuCarousel, LV_OBJ_FLAG_SCROLL_ONE);     /// Flags
-    lv_obj_clear_flag(ui_uiMenuCarousel, LV_OBJ_FLAG_CLICKABLE);      /// Flags
-    lv_obj_set_scroll_dir(ui_uiMenuCarousel, LV_DIR_HOR);
+    lv_obj_clear_flag(ui_uiMenuCarousel, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLL_ELASTIC);      /// Flags
+    lv_obj_set_scroll_dir(ui_uiMenuCarousel, LV_DIR_VER);
     lv_obj_set_scroll_snap_x(ui_uiMenuCarousel, LV_SCROLL_SNAP_CENTER);
 
     ui_uiHomePanel = lv_obj_create(ui_uiMenuCarousel);
