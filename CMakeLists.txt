@@ -34,15 +34,16 @@ add_executable(pico_shark
     main.cpp
     ST7789/PicoGFX.cpp
     ST7789/ST7789.cpp
-    src/onewire_library.cpp
+    setup.cpp
+    #src/onewire_library.cpp
     src/enkoder.cpp
-    src/ds18b20.cpp
+    #src/ds18b20.cpp
 )
 
 pico_enable_stdio_usb(pico_shark 1)
 
-pico_generate_pio_header(pico_shark ${CMAKE_CURRENT_LIST_DIR}/src/pio/onewire_library.pio)
-pico_generate_pio_header(pico_shark ${CMAKE_CURRENT_LIST_DIR}/src/pio/DS18B20.pio)
+#pico_generate_pio_header(pico_shark ${CMAKE_CURRENT_LIST_DIR}/src/pio/onewire_library.pio)
+#pico_generate_pio_header(pico_shark ${CMAKE_CURRENT_LIST_DIR}/src/pio/DS18B20.pio)
 
 target_link_libraries(pico_shark PRIVATE
     pico_stdlib

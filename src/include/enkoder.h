@@ -3,11 +3,12 @@
 
 #include "pico/stdlib.h"
 
-#define SW  9
-#define DT 12
-#define CLK 13
+#define SW  17
+#define DT 16
+#define CLK 15
 
 extern volatile int counter;
+extern volatile bool button_pressed;
 extern bool last_state_A;
 
 void encoder_init();
