@@ -125,6 +125,13 @@ void back_button_click_cb(lv_event_t * e) {
 	lv_indev_set_group(indev_encoder, main_menu_group);
 }
 
+void search_button_click_cb(lv_event_t * e) {
+	printf("Search button clicked! Starting Wi-Fi Scan...\n");
+
+	// Вызываем вашу готовую функцию сканирования сети
+	wifi_scan_network();
+}
+
 // Инициализация всего интерфейса
 void setup_all(void) {
 	display.begin();
@@ -193,7 +200,7 @@ void setup_all(void) {
 	lv_obj_add_style(ui_OffButtonWiFi, &style_focused, LV_STATE_FOCUSED);
 
 	lv_obj_add_event_cb(ui_BackButtonWiFi, back_button_click_cb, LV_EVENT_CLICKED, NULL);
-
+	lv_obj_add_event_cb(ui_SearchButton, search_button_click_cb, LV_EVENT_CLICKED, NULL);
 	// -------------------------------------------------------------------------
 	// НАСТРОЙКА СТАРТА ГЕОМЕТРИИ (ДЛЯ COLUMN ВЕРТИКАЛИ)
 	// -------------------------------------------------------------------------
@@ -214,3 +221,44 @@ void setup_all(void) {
 
 	printf("Setup complete. Vertical layout synchronized.\n");
 }
+
+
+int scan_result_cb(void *env, const cyw43_ev_scan_result_t *result) {
+	if (result) {
+		printf("SSID: %-32s | RSSI: %4d | Channel: %3d\n",
+			   result->ssid, result->rssi, result->channel);
+	}
+	return 0;
+}
+
+void wifi_scan_network() {
+	printf("Initializing Wi-Fi chip...\n");
+
+	// Пытаемся инициализировать
+	int init_res = cyw43_arch_init();
+	if (init_res != 0) {
+		printf("Failed to initialize CYW43: %d\n", init_res);
+		return; // Если тут ошибка, дальше идти нет смысла
+	}
+
+	cyw43_arch_enable_sta_mode();
+	printf("Wi-Fi init success, mode STA enabled.\n");
+
+	// Даем время чипу "проснуться"
+	sleep_ms(500);
+
+	while (true) {
+		if (!cyw43_wifi_scan_active(&cyw43_state)) {
+			cyw43_wifi_scan_options_t scan_options = {0};
+			int err = cyw43_wifi_scan(&cyw43_state, &scan_options, NULL, scan_result_cb);
+
+			if (err == 0) {
+				printf("Scan started...\n");
+			} else {
+				printf("Scan error: %d\n", err);
+			}
+		}
+		sleep_ms(10000);
+	}
+}
+

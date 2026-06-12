@@ -3,6 +3,7 @@
 #include "lvgl/lvgl.h"
 #include "ui/ui.h"
 #include "src/include/enkoder.h"
+#include "pico/cyw43_arch.h"
 
 // Драйвер ввода
 extern lv_indev_t * indev_encoder;
@@ -20,3 +21,8 @@ void setup_all(void);
 void rfid_panel_click_cb(lv_event_t * e);
 void wifi_panel_click_cb(lv_event_t * e);
 void back_button_click_cb(lv_event_t * e);
+
+// for WiFi chip
+void wifi_scan_network(void);
+int scan_result_cb(void *env, const cyw43_ev_scan_result_t *result);
+

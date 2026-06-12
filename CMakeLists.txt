@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(PICO_BOARD pico2)
+set(PICO_BOARD pico2_w)
 set(PICO_PLATFORM rp2350)
 
 # ... (инициализация pico и прочее)
@@ -53,6 +53,7 @@ target_link_libraries(pico_shark PRIVATE
     hardware_spi
     lvgl
     ui
+    pico_cyw43_arch_lwip_threadsafe_background
     #"-Wl,--whole-archive ui -Wl,--no-whole-archive"
 )
 
