@@ -5,19 +5,13 @@
 
 #include "../ui.h"
 
+lv_obj_t * uic_NetListRoller;
 lv_obj_t * ui_Screen1 = NULL;
 lv_obj_t * ui_uiMenuCarousel = NULL;
 lv_obj_t * ui_uiHomePanel = NULL;
 lv_obj_t * ui_BatLabel = NULL;
 lv_obj_t * ui_BatValLabel = NULL;
 lv_obj_t * ui_TimeLabel = NULL;
-lv_obj_t * ui_Container1 = NULL;
-lv_obj_t * ui_RFIDLabel = NULL;
-lv_obj_t * ui_NFCLabel = NULL;
-lv_obj_t * ui_WiFiLabel = NULL;
-lv_obj_t * ui_RFIDStatusLabel = NULL;
-lv_obj_t * ui_NFCStatusLabel = NULL;
-lv_obj_t * ui_WiFiStatusLabel = NULL;
 lv_obj_t * ui_Container2 = NULL;
 lv_obj_t * ui_TempLabel = NULL;
 lv_obj_t * ui_TempValLabel = NULL;
@@ -28,22 +22,16 @@ lv_obj_t * ui_PressValLabel = NULL;
 lv_obj_t * ui_uiRFIDPanel = NULL;
 lv_obj_t * ui_BackButton = NULL;
 lv_obj_t * ui_BackLabel = NULL;
-lv_obj_t * ui_OnButton = NULL;
-lv_obj_t * ui_OnLabel = NULL;
 lv_obj_t * ui_SearchButton = NULL;
 lv_obj_t * ui_SearchLabel = NULL;
 lv_obj_t * ui_OutputLabel = NULL;
-lv_obj_t * ui_OffButton = NULL;
-lv_obj_t * ui_OffLabel = NULL;
 lv_obj_t * ui_uiWiFiPanel = NULL;
 lv_obj_t * ui_BackButtonWiFi = NULL;
 lv_obj_t * ui_BackLabelWiFI = NULL;
-lv_obj_t * ui_NetTextArea = NULL;
+lv_obj_t * ui_ScanWiFiBut = NULL;
+lv_obj_t * ui_ScanWiFiLabel = NULL;
 lv_obj_t * ui_NetLabel = NULL;
-lv_obj_t * ui_OnButtonWiFi = NULL;
-lv_obj_t * ui_OffButtonWiFi = NULL;
-lv_obj_t * ui_OnLabelWiFi = NULL;
-lv_obj_t * ui_OffLabelWiFi = NULL;
+lv_obj_t * ui_NetListRoller = NULL;
 // event funtions
 
 // build funtions
@@ -73,6 +61,7 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_x(ui_uiHomePanel, 0);
     lv_obj_set_y(ui_uiHomePanel, -2);
     lv_obj_set_align(ui_uiHomePanel, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_uiHomePanel, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_clear_flag(ui_uiHomePanel, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_uiHomePanel, lv_color_hex(0x0E002E), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_uiHomePanel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -102,94 +91,20 @@ void ui_Screen1_screen_init(void)
     ui_TimeLabel = lv_label_create(ui_uiHomePanel);
     lv_obj_set_width(ui_TimeLabel, 120);
     lv_obj_set_height(ui_TimeLabel, 44);
-    lv_obj_set_y(ui_TimeLabel, -2);
-    lv_obj_set_x(ui_TimeLabel, lv_pct(-1));
+    lv_obj_set_y(ui_TimeLabel, -8);
+    lv_obj_set_x(ui_TimeLabel, lv_pct(-2));
     lv_obj_set_align(ui_TimeLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_TimeLabel, "00:00");
     lv_obj_set_style_text_color(ui_TimeLabel, lv_color_hex(0x00D9FF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_TimeLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_TimeLabel, &lv_font_montserrat_40, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Container1 = lv_obj_create(ui_uiHomePanel);
-    lv_obj_remove_style_all(ui_Container1);
-    lv_obj_set_width(ui_Container1, 81);
-    lv_obj_set_height(ui_Container1, 53);
-    lv_obj_set_x(ui_Container1, -109);
-    lv_obj_set_y(ui_Container1, -81);
-    lv_obj_set_align(ui_Container1, LV_ALIGN_CENTER);
-    lv_obj_set_flex_flow(ui_Container1, LV_FLEX_FLOW_COLUMN_WRAP);
-    lv_obj_set_flex_align(ui_Container1, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_clear_flag(ui_Container1, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_pad_row(ui_Container1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_column(ui_Container1, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_RFIDLabel = lv_label_create(ui_Container1);
-    lv_obj_set_width(ui_RFIDLabel, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_RFIDLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_RFIDLabel, -127);
-    lv_obj_set_y(ui_RFIDLabel, -77);
-    lv_obj_set_align(ui_RFIDLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_RFIDLabel, "RFID");
-    lv_obj_set_style_text_color(ui_RFIDLabel, lv_color_hex(0x00D9FF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_RFIDLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_NFCLabel = lv_label_create(ui_Container1);
-    lv_obj_set_width(ui_NFCLabel, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_NFCLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_NFCLabel, -128);
-    lv_obj_set_y(ui_NFCLabel, -51);
-    lv_obj_set_align(ui_NFCLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_NFCLabel, "NFC");
-    lv_obj_set_style_text_color(ui_NFCLabel, lv_color_hex(0x00D9FF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_NFCLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_WiFiLabel = lv_label_create(ui_Container1);
-    lv_obj_set_width(ui_WiFiLabel, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_WiFiLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_WiFiLabel, -126);
-    lv_obj_set_y(ui_WiFiLabel, -101);
-    lv_obj_set_align(ui_WiFiLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_WiFiLabel, "WiFi");
-    lv_obj_set_style_text_color(ui_WiFiLabel, lv_color_hex(0x00D9FF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_WiFiLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_WiFiLabel, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_RFIDStatusLabel = lv_label_create(ui_Container1);
-    lv_obj_set_width(ui_RFIDStatusLabel, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_RFIDStatusLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_RFIDStatusLabel, -85);
-    lv_obj_set_y(ui_RFIDStatusLabel, -77);
-    lv_obj_set_align(ui_RFIDStatusLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_RFIDStatusLabel, "off");
-    lv_obj_set_style_text_color(ui_RFIDStatusLabel, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_RFIDStatusLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_NFCStatusLabel = lv_label_create(ui_Container1);
-    lv_obj_set_width(ui_NFCStatusLabel, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_NFCStatusLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_NFCStatusLabel, -85);
-    lv_obj_set_y(ui_NFCStatusLabel, -51);
-    lv_obj_set_align(ui_NFCStatusLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_NFCStatusLabel, "off");
-    lv_obj_set_style_text_color(ui_NFCStatusLabel, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_NFCStatusLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_WiFiStatusLabel = lv_label_create(ui_Container1);
-    lv_obj_set_width(ui_WiFiStatusLabel, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_WiFiStatusLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_WiFiStatusLabel, -86);
-    lv_obj_set_y(ui_WiFiStatusLabel, -102);
-    lv_obj_set_align(ui_WiFiStatusLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_WiFiStatusLabel, "off");
-    lv_obj_set_style_text_color(ui_WiFiStatusLabel, lv_color_hex(0xFF0011), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_WiFiStatusLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
     ui_Container2 = lv_obj_create(ui_uiHomePanel);
     lv_obj_remove_style_all(ui_Container2);
     lv_obj_set_width(ui_Container2, 147);
     lv_obj_set_height(ui_Container2, 42);
-    lv_obj_set_x(ui_Container2, -3);
-    lv_obj_set_y(ui_Container2, 69);
+    lv_obj_set_x(ui_Container2, -69);
+    lv_obj_set_y(ui_Container2, -83);
     lv_obj_set_align(ui_Container2, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_Container2, LV_FLEX_FLOW_COLUMN_WRAP);
     lv_obj_set_flex_align(ui_Container2, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
@@ -262,6 +177,8 @@ void ui_Screen1_screen_init(void)
     ui_uiRFIDPanel = lv_obj_create(ui_uiMenuCarousel);
     lv_obj_set_width(ui_uiRFIDPanel, 320);
     lv_obj_set_height(ui_uiRFIDPanel, 240);
+    lv_obj_set_x(ui_uiRFIDPanel, 1);
+    lv_obj_set_y(ui_uiRFIDPanel, 0);
     lv_obj_set_align(ui_uiRFIDPanel, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_uiRFIDPanel, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_uiRFIDPanel, lv_color_hex(0x0E002E), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -288,27 +205,8 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_align(ui_BackLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_BackLabel, "Back");
 
-    ui_OnButton = lv_btn_create(ui_uiRFIDPanel);
-    lv_obj_set_width(ui_OnButton, 63);
-    lv_obj_set_height(ui_OnButton, 30);
-    lv_obj_set_x(ui_OnButton, -17);
-    lv_obj_set_y(ui_OnButton, -98);
-    lv_obj_set_align(ui_OnButton, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_OnButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_OnButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_OnButton, lv_color_hex(0x8C00EE), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_OnButton, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_OnLabel = lv_label_create(ui_uiRFIDPanel);
-    lv_obj_set_width(ui_OnLabel, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_OnLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_OnLabel, -17);
-    lv_obj_set_y(ui_OnLabel, -98);
-    lv_obj_set_align(ui_OnLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_OnLabel, "turn on");
-
     ui_SearchButton = lv_btn_create(ui_uiRFIDPanel);
-    lv_obj_set_width(ui_SearchButton, 100);
+    lv_obj_set_width(ui_SearchButton, 127);
     lv_obj_set_height(ui_SearchButton, 50);
     lv_obj_set_x(ui_SearchButton, -18);
     lv_obj_set_y(ui_SearchButton, -33);
@@ -324,7 +222,7 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_x(ui_SearchLabel, -17);
     lv_obj_set_y(ui_SearchLabel, -33);
     lv_obj_set_align(ui_SearchLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_SearchLabel, "Search...");
+    lv_label_set_text(ui_SearchLabel, "Read card");
     lv_obj_set_style_text_font(ui_SearchLabel, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_OutputLabel = lv_label_create(ui_uiRFIDPanel);
@@ -337,30 +235,11 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_style_text_color(ui_OutputLabel, lv_color_hex(0x00D9FF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_OutputLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_OffButton = lv_btn_create(ui_uiRFIDPanel);
-    lv_obj_set_width(ui_OffButton, 63);
-    lv_obj_set_height(ui_OffButton, 30);
-    lv_obj_set_x(ui_OffButton, 99);
-    lv_obj_set_y(ui_OffButton, -100);
-    lv_obj_set_align(ui_OffButton, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_OffButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_OffButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_OffButton, lv_color_hex(0x8C00EE), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_OffButton, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_OffLabel = lv_label_create(ui_uiRFIDPanel);
-    lv_obj_set_width(ui_OffLabel, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_OffLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_OffLabel, 99);
-    lv_obj_set_y(ui_OffLabel, -100);
-    lv_obj_set_align(ui_OffLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_OffLabel, "turn off");
-
     ui_uiWiFiPanel = lv_obj_create(ui_uiMenuCarousel);
     lv_obj_set_width(ui_uiWiFiPanel, 320);
     lv_obj_set_height(ui_uiWiFiPanel, 240);
     lv_obj_set_x(ui_uiWiFiPanel, 4);
-    lv_obj_set_y(ui_uiWiFiPanel, 0);
+    lv_obj_set_y(ui_uiWiFiPanel, -4);
     lv_obj_set_align(ui_uiWiFiPanel, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_uiWiFiPanel, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_uiWiFiPanel, lv_color_hex(0x0E002E), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -385,61 +264,57 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_align(ui_BackLabelWiFI, LV_ALIGN_CENTER);
     lv_label_set_text(ui_BackLabelWiFI, "Back");
 
-    ui_NetTextArea = lv_textarea_create(ui_uiWiFiPanel);
-    lv_obj_set_width(ui_NetTextArea, 123);
-    lv_obj_set_height(ui_NetTextArea, 140);
-    lv_obj_set_x(ui_NetTextArea, -74);
-    lv_obj_set_y(ui_NetTextArea, 23);
-    lv_obj_set_align(ui_NetTextArea, LV_ALIGN_CENTER);
-    lv_textarea_set_max_length(ui_NetTextArea, 1000);
+    ui_ScanWiFiBut = lv_btn_create(ui_uiWiFiPanel);
+    lv_obj_set_width(ui_ScanWiFiBut, 49);
+    lv_obj_set_height(ui_ScanWiFiBut, 21);
+    lv_obj_set_x(ui_ScanWiFiBut, -42);
+    lv_obj_set_y(ui_ScanWiFiBut, -99);
+    lv_obj_set_align(ui_ScanWiFiBut, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_ScanWiFiBut, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_ScanWiFiBut, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_ScanWiFiBut, lv_color_hex(0x8C00EE), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_ScanWiFiBut, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_ScanWiFiLabel = lv_label_create(ui_uiWiFiPanel);
+    lv_obj_set_width(ui_ScanWiFiLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ScanWiFiLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_ScanWiFiLabel, -41);
+    lv_obj_set_y(ui_ScanWiFiLabel, -99);
+    lv_obj_set_align(ui_ScanWiFiLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_ScanWiFiLabel, "Scan");
 
     ui_NetLabel = lv_label_create(ui_uiWiFiPanel);
     lv_obj_set_width(ui_NetLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_NetLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_NetLabel, -75);
-    lv_obj_set_y(ui_NetLabel, -61);
+    lv_obj_set_x(ui_NetLabel, -5);
+    lv_obj_set_y(ui_NetLabel, -60);
     lv_obj_set_align(ui_NetLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_NetLabel, "available network");
     lv_obj_set_style_text_color(ui_NetLabel, lv_color_hex(0x00D9FF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_NetLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_OnButtonWiFi = lv_btn_create(ui_uiWiFiPanel);
-    lv_obj_set_width(ui_OnButtonWiFi, 63);
-    lv_obj_set_height(ui_OnButtonWiFi, 30);
-    lv_obj_set_x(ui_OnButtonWiFi, -21);
-    lv_obj_set_y(ui_OnButtonWiFi, -95);
-    lv_obj_set_align(ui_OnButtonWiFi, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_OnButtonWiFi, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_OnButtonWiFi, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_OnButtonWiFi, lv_color_hex(0x8C00EE), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_OnButtonWiFi, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_NetListRoller = lv_roller_create(ui_uiWiFiPanel);
+    lv_roller_set_options(ui_NetListRoller, "empty", LV_ROLLER_MODE_INFINITE);
+    lv_obj_set_width(ui_NetListRoller, 122);
+    lv_obj_set_height(ui_NetListRoller, 113);
+    lv_obj_set_x(ui_NetListRoller, 0);
+    lv_obj_set_y(ui_NetListRoller, 20);
+    lv_obj_set_align(ui_NetListRoller, LV_ALIGN_CENTER);
+    lv_obj_set_style_text_color(ui_NetListRoller, lv_color_hex(0x565656), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_NetListRoller, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_NetListRoller, lv_color_hex(0x8C00EE), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_NetListRoller, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_NetListRoller, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_NetListRoller, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_NetListRoller, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_OffButtonWiFi = lv_btn_create(ui_uiWiFiPanel);
-    lv_obj_set_width(ui_OffButtonWiFi, 63);
-    lv_obj_set_height(ui_OffButtonWiFi, 30);
-    lv_obj_set_x(ui_OffButtonWiFi, 86);
-    lv_obj_set_y(ui_OffButtonWiFi, -93);
-    lv_obj_set_align(ui_OffButtonWiFi, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_OffButtonWiFi, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_OffButtonWiFi, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_OffButtonWiFi, lv_color_hex(0x8C00EE), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_OffButtonWiFi, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_NetListRoller, lv_color_hex(0xFFFFFF), LV_PART_SELECTED | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_NetListRoller, 255, LV_PART_SELECTED | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_NetListRoller, 10, LV_PART_SELECTED | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_NetListRoller, lv_color_hex(0x2D27A8), LV_PART_SELECTED | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_NetListRoller, 255, LV_PART_SELECTED | LV_STATE_DEFAULT);
 
-    ui_OnLabelWiFi = lv_label_create(ui_uiWiFiPanel);
-    lv_obj_set_width(ui_OnLabelWiFi, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_OnLabelWiFi, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_OnLabelWiFi, -19);
-    lv_obj_set_y(ui_OnLabelWiFi, -94);
-    lv_obj_set_align(ui_OnLabelWiFi, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_OnLabelWiFi, "Turn on");
-
-    ui_OffLabelWiFi = lv_label_create(ui_uiWiFiPanel);
-    lv_obj_set_width(ui_OffLabelWiFi, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_OffLabelWiFi, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_OffLabelWiFi, 87);
-    lv_obj_set_y(ui_OffLabelWiFi, -93);
-    lv_obj_set_align(ui_OffLabelWiFi, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_OffLabelWiFi, "Turn off");
+    uic_NetListRoller = ui_NetListRoller;
 
 }
 
@@ -454,13 +329,6 @@ void ui_Screen1_screen_destroy(void)
     ui_BatLabel = NULL;
     ui_BatValLabel = NULL;
     ui_TimeLabel = NULL;
-    ui_Container1 = NULL;
-    ui_RFIDLabel = NULL;
-    ui_NFCLabel = NULL;
-    ui_WiFiLabel = NULL;
-    ui_RFIDStatusLabel = NULL;
-    ui_NFCStatusLabel = NULL;
-    ui_WiFiStatusLabel = NULL;
     ui_Container2 = NULL;
     ui_TempLabel = NULL;
     ui_TempValLabel = NULL;
@@ -471,21 +339,16 @@ void ui_Screen1_screen_destroy(void)
     ui_uiRFIDPanel = NULL;
     ui_BackButton = NULL;
     ui_BackLabel = NULL;
-    ui_OnButton = NULL;
-    ui_OnLabel = NULL;
     ui_SearchButton = NULL;
     ui_SearchLabel = NULL;
     ui_OutputLabel = NULL;
-    ui_OffButton = NULL;
-    ui_OffLabel = NULL;
     ui_uiWiFiPanel = NULL;
     ui_BackButtonWiFi = NULL;
     ui_BackLabelWiFI = NULL;
-    ui_NetTextArea = NULL;
+    ui_ScanWiFiBut = NULL;
+    ui_ScanWiFiLabel = NULL;
     ui_NetLabel = NULL;
-    ui_OnButtonWiFi = NULL;
-    ui_OffButtonWiFi = NULL;
-    ui_OnLabelWiFi = NULL;
-    ui_OffLabelWiFi = NULL;
+    uic_NetListRoller = NULL;
+    ui_NetListRoller = NULL;
 
 }

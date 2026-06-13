@@ -19,13 +19,6 @@ extern lv_obj_t * ui_uiHomePanel;
 extern lv_obj_t * ui_BatLabel;
 extern lv_obj_t * ui_BatValLabel;
 extern lv_obj_t * ui_TimeLabel;
-extern lv_obj_t * ui_Container1;
-extern lv_obj_t * ui_RFIDLabel;
-extern lv_obj_t * ui_NFCLabel;
-extern lv_obj_t * ui_WiFiLabel;
-extern lv_obj_t * ui_RFIDStatusLabel;
-extern lv_obj_t * ui_NFCStatusLabel;
-extern lv_obj_t * ui_WiFiStatusLabel;
 extern lv_obj_t * ui_Container2;
 extern lv_obj_t * ui_TempLabel;
 extern lv_obj_t * ui_TempValLabel;
@@ -36,23 +29,18 @@ extern lv_obj_t * ui_PressValLabel;
 extern lv_obj_t * ui_uiRFIDPanel;
 extern lv_obj_t * ui_BackButton;
 extern lv_obj_t * ui_BackLabel;
-extern lv_obj_t * ui_OnButton;
-extern lv_obj_t * ui_OnLabel;
 extern lv_obj_t * ui_SearchButton;
 extern lv_obj_t * ui_SearchLabel;
 extern lv_obj_t * ui_OutputLabel;
-extern lv_obj_t * ui_OffButton;
-extern lv_obj_t * ui_OffLabel;
 extern lv_obj_t * ui_uiWiFiPanel;
 extern lv_obj_t * ui_BackButtonWiFi;
 extern lv_obj_t * ui_BackLabelWiFI;
-extern lv_obj_t * ui_NetTextArea;
+extern lv_obj_t * ui_ScanWiFiBut;
+extern lv_obj_t * ui_ScanWiFiLabel;
 extern lv_obj_t * ui_NetLabel;
-extern lv_obj_t * ui_OnButtonWiFi;
-extern lv_obj_t * ui_OffButtonWiFi;
-extern lv_obj_t * ui_OnLabelWiFi;
-extern lv_obj_t * ui_OffLabelWiFi;
+extern lv_obj_t * ui_NetListRoller;
 // CUSTOM VARIABLES
+extern lv_obj_t * uic_NetListRoller;
 
 #ifdef __cplusplus
 } /*extern "C"*/
