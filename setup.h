@@ -21,8 +21,13 @@ void setup_all(void);
 void rfid_panel_click_cb(lv_event_t * e);
 void wifi_panel_click_cb(lv_event_t * e);
 void back_button_click_cb(lv_event_t * e);
+void scan_button_click_cb(lv_event_t * e);
 
 // for WiFi chip
+extern volatile bool wifi_scan_finished;
+extern std::string roller_options_string;
+extern lv_obj_t * ui_NetListRoller;
+
 void wifi_scan_network(void);
 int scan_result_cb(void *env, const cyw43_ev_scan_result_t *result);
 
