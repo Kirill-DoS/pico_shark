@@ -1,4 +1,5 @@
 #include "setup.h"
+#include "lvgl/src/core/lv_event.h"
 #include "lvgl/src/core/lv_group.h"
 #include "pico/stdlib.h"
 #include "ui/screens/ui_Screen1.h"
@@ -9,9 +10,11 @@
 #include <algorithm>
 
 std::vector<std::string> found_ssids;
-std::string roller_options_string = "";   // Строка опций для Roller
-volatile bool wifi_scan_finished = false; // Флаг окончания сканирования
-bool is_scanning_now = false;             // Защита от повторных кликов
+std::string roller_options_string;
+bool is_scanning_now = false;
+
+volatile bool wifi_scan_in_progress = false;
+volatile bool wifi_scan_data_ready = false;
 
 // Железо экрана
 static ST7789 display(5, 4, 3, spi0);
@@ -32,40 +35,38 @@ static bool in_sub_menu = false;
 
 // Чтение энкодера с защитой от "убегания" интерфейса
 void encoder_read_cb(lv_indev_drv_t * drv, lv_indev_data_t * data) {
-
 	int current_counter = counter;
 	int diff = current_counter - last_counter_value;
 	last_counter_value = current_counter;
 
-	// Если мы зашли внутрь подменю (кнопки, роллеры) - отдаем diff в LVGL
 	if (in_sub_menu) {
-		data->enc_diff = diff;
+		data->enc_diff = diff; // Внутри подменю работает обычный скролл LVGL
 	} else {
-		// Если мы на верхнем уровне (главные панели), блокируем автоскролл LVGL
-		data->enc_diff = 0;
-
-		// И сами жестко переключаем страницы 0, 1, 2
-		if (diff > 0) {
-			current_page++;
-			if (current_page > 2) current_page = 2;
-		} else if (diff < 0) {
-			current_page--;
-			if (current_page < 0) current_page = 0;
-		}
+		data->enc_diff = 0; // На главном экране скролл LVGL отключен
 
 		if (diff != 0) {
+			// КРУГОВАЯ НАВИГАЦИЯ
+			if (diff > 0) {
+				current_page++;
+				if (current_page > MAX_PANEL) current_page = 0; // С WiFi (2) переходим на Home (0)
+			} else if (diff < 0) {
+				current_page--;
+				if (current_page < 0) current_page = MAX_PANEL; // С Home (0) переходим на WiFi (2)
+			}
+
 			printf("Switching page to: %d\n", current_page);
-			// Сдвигаем карусель строго по координатам (каждая панель по 240px в высоту)
+
+			// Сдвигаем карусель
 			lv_obj_scroll_to_y(ui_uiMenuCarousel, current_page * 240, LV_ANIM_OFF);
 
-			// Фокусируем нужную панель верхнего уровня
+			// Фокусируем нужную панель
 			if (current_page == 0) lv_group_focus_obj(ui_uiHomePanel);
 			else if (current_page == 1) lv_group_focus_obj(ui_uiRFIDPanel);
 			else if (current_page == 2) lv_group_focus_obj(ui_uiWiFiPanel);
 		}
 	}
 
-	// Передаем состояние физической кнопки
+	// Состояние кнопки
 	if (gpio_get(SW) == 0) {
 		data->state = LV_INDEV_STATE_PR;
 	} else {
@@ -108,16 +109,28 @@ void back_button_click_cb(lv_event_t * e) {
 
 // Клик по кнопке Scan
 void scan_button_click_cb(lv_event_t * e) {
-	if (is_scanning_now) return;
+	lv_event_code_t code = lv_event_get_code(e);
 
-	printf("Scan button triggered!\n");
-	is_scanning_now = true;
+	if(code == LV_EVENT_CLICKED){
+		if(!wifi_scan_in_progress){
+			wifi_scan_in_progress = true;
+			wifi_scan_data_ready = false;
 
-	// Выводим текст ожидания в роллер
-	lv_roller_set_options(ui_NetListRoller, "Scanning...\nPlease wait...", LV_ROLLER_MODE_NORMAL);
-	lv_obj_invalidate(ui_NetListRoller);
-
-	wifi_scan_network();
+			roller_options_string.clear();
+			cyw43_wifi_scan_options_t scan_options = {0};
+			cyw43_wifi_scan(&cyw43_state, &scan_options, NULL, work_wifi_scan_result_cb);
+		}
+	}
+	// if (is_scanning_now) return;
+ //
+	// printf("Scan button triggered!\n");
+	// is_scanning_now = true;
+ //
+	// // Выводим текст ожидания в роллер
+	// lv_roller_set_options(ui_NetListRoller, "Scanning...\nPlease wait...", LV_ROLLER_MODE_NORMAL);
+	// lv_obj_invalidate(ui_NetListRoller);
+ //
+	// wifi_scan_network();
 }
 
 // Инициализация всего интерфейса
@@ -191,65 +204,73 @@ void setup_all(void) {
 	current_page = 0;
 	in_sub_menu = false;
 	is_scanning_now = false;
-	wifi_scan_finished = false;
 }
 
 // Обработчик результатов Wi-Fi
-int scan_result_cb(void *env, const cyw43_ev_scan_result_t *result) {
-	if (result) {
+// int scan_result_cb(void *env, const cyw43_ev_scan_result_t *result) {
+// 	if (result) {
+// 		if (result->ssid_len > 32 || result->ssid_len == 0) return 0;
+//
+// 		char safe_ssid[33];
+// 		memset(safe_ssid, 0, sizeof(safe_ssid));
+// 		memcpy(safe_ssid, result->ssid, result->ssid_len);
+// 		std::string name(safe_ssid);
+// 		if (name.empty()) name = "[Hidden]";
+//
+// 		if (std::find(found_ssids.begin(), found_ssids.end(), name) == found_ssids.end()) {
+// 			found_ssids.push_back(name);
+// 			printf("Found Wi-Fi: %s\n", name.c_str());
+// 		}
+// 	} else {
+// 		printf("Scan finished. Formatting options...\n");
+// 		roller_options_string = "";
+// 		for (const auto& s : found_ssids) {
+// 			roller_options_string += s + "\n";
+// 		}
+// 		if (!roller_options_string.empty()) {
+// 			roller_options_string.pop_back();
+// 		} else {
+// 			roller_options_string = "No networks found";
+// 		}
+// 	}
+// 	return 0;
+// }
 
-		std::string name((const char*)result->ssid, result->ssid_len);
-		if (name.empty()) name = "[Hidden]";
+int work_wifi_scan_result_cb(void *env, const cyw43_ev_scan_result_t *result){
+	if(!result) return 0;
 
-		if (std::find(found_ssids.begin(), found_ssids.end(), name) == found_ssids.end()) {
-			found_ssids.push_back(name);
-			printf("Found Wi-Fi: %s\n", name.c_str());
+	std::string ssid_str(reinterpret_cast<const char*>(result->ssid));
+
+	if(ssid_str.empty()) return 0;
+
+	if(roller_options_string.find(ssid_str) == std::string::npos){
+		if(!roller_options_string.empty()){
+			roller_options_string += "\n";
 		}
-	} else {
-		// result == NULL -> Сканирование железно завершено!
-		printf("Scan finished. Formatting options...\n");
 
-		roller_options_string = "";
-		for (const auto& s : found_ssids) {
-			roller_options_string += s + "\n";
-		}
-
-		if (!roller_options_string.empty()) {
-			roller_options_string.pop_back();
-		} else {
-			roller_options_string = "No networks found";
-		}
-
-		printf("Deinitializing Wi-Fi chip to free memory...\n");
-		cyw43_arch_deinit();
-
-		// Поднимаем флаг готовности для UI
-		wifi_scan_finished = true;
+		roller_options_string +=ssid_str;
 	}
 	return 0;
 }
 
-// Функция старта сканирования
-void wifi_scan_network() {
-	printf("Starting Wi-Fi scan process...\n");
-	found_ssids.clear();
-
-	// Инициализируем чип "с нуля" при каждом поиске
-	int init_res = cyw43_arch_init();
-	if (init_res != 0) {
-		printf("Failed to init CYW43: %d\n", init_res);
-		wifi_scan_finished = true;
-		return;
-	}
-
-	cyw43_arch_enable_sta_mode();
-
-	cyw43_wifi_scan_options_t scan_options = {0};
-	int err = cyw43_wifi_scan(&cyw43_state, &scan_options, NULL, scan_result_cb);
-
-	if (err < 0) {
-		printf("Scan trigger failed: %d. Cleaning up...\n", err);
-		cyw43_arch_deinit(); // Сразу закрываем чип, если старт сорвался
-		wifi_scan_finished = true;
-	}
-}
+// void wifi_scan_network() {
+// 	printf("Starting Wi-Fi scan process...\n");
+// 	found_ssids.clear();
+//
+// 	int init_res = cyw43_arch_init();
+// 	if (init_res != 0) {
+// 		printf("Failed to init CYW43: %d\n", init_res);
+// 		is_scanning_now = false;
+// 		return;
+// 	}
+//
+// 	cyw43_arch_enable_sta_mode();
+// 	cyw43_wifi_scan_options_t scan_options = {0};
+// 	int err = cyw43_wifi_scan(&cyw43_state, &scan_options, NULL, scan_result_cb);
+//
+// 	if (err < 0) {
+// 		printf("Scan trigger failed: %d. Cleaning up...\n", err);
+// 		cyw43_arch_deinit();
+// 		is_scanning_now = false;
+// 	}
+// }

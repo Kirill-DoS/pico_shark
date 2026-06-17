@@ -5,6 +5,15 @@
 #include "src/include/enkoder.h"
 #include "pico/cyw43_arch.h"
 
+#include <string>
+
+#define MAX_PANEL 2
+
+extern bool is_scanning_now;
+
+extern volatile bool wifi_scan_in_progress;
+extern volatile bool wifi_scan_data_ready;
+
 // Драйвер ввода
 extern lv_indev_t * indev_encoder;
 
@@ -27,7 +36,8 @@ void scan_button_click_cb(lv_event_t * e);
 extern volatile bool wifi_scan_finished;
 extern std::string roller_options_string;
 extern lv_obj_t * ui_NetListRoller;
+extern volatile bool wifi_chip_active;
 
-void wifi_scan_network(void);
-int scan_result_cb(void *env, const cyw43_ev_scan_result_t *result);
-
+//void wifi_scan_network(void);
+//int scan_result_cb(void *env, const cyw43_ev_scan_result_t *result);
+int work_wifi_scan_result_cb(void *env, const cyw43_ev_scan_result_t *result);

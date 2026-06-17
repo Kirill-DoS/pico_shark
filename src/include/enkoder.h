@@ -9,7 +9,7 @@
 
 extern volatile int counter;
 extern volatile bool button_pressed;
-extern bool last_state_A;
+extern volatile bool last_state_A;
 
 void encoder_init();
 

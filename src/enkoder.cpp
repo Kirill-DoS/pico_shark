@@ -6,7 +6,7 @@
 
 volatile int counter = 0;
 volatile bool button_pressed = false; // Флаг фиксации нажатия кнопки
-bool last_state_A = false;
+volatile bool last_state_A = false;
 
 // Объявляем ISR заранее
 void encoder_isr(uint gpio, uint32_t events);
@@ -45,7 +45,7 @@ void encoder_isr(uint gpio, uint32_t events){
     // Если прерывание пришло от кнопки (SW)
     if (gpio == SW) {
         button_pressed = true; // Фиксируем аппаратное нажатие!
-        printf("Hardware SW ISR Triggered!\n");
+        //printf("Hardware SW ISR Triggered!\n");
         return;
     }
 
