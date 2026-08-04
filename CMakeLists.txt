@@ -37,6 +37,7 @@ add_executable(pico_shark
     setup.cpp
     #src/onewire_library.cpp
     src/enkoder.cpp
+    src/temp_press.cpp
     #src/ds18b20.cpp
 )
 
@@ -51,9 +52,11 @@ target_link_libraries(pico_shark PRIVATE
     hardware_gpio
     hardware_dma
     hardware_spi
+    hardware_i2c
     lvgl
     ui
     pico_cyw43_arch_lwip_threadsafe_background
+    pico_lwip_sntp
     #"-Wl,--whole-archive ui -Wl,--no-whole-archive"
 )
 
