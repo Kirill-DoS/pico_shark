@@ -37,6 +37,6 @@
 #define SCREEN_HEIGHT 240
 
 // pinout
-#define MOSI 18
-#define SCK 19
+#define MOSI 19
+#define SCK 18
 #define MISO 16

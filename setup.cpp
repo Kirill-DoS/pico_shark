@@ -1,9 +1,32 @@
 #include "setup.h"
+#include "lvgl/src/core/lv_event.h"
+#include "lvgl/src/core/lv_group.h"
 #include "pico/stdlib.h"
+#include "pins.h"
+#include "src/pn532/pn532.h"
+#include "ui/screens/ui_Screen1.h"
 #include <stdio.h>
+#include "pins.h"
+#include <vector>
+#include <string>
+#include <algorithm>
+
+std::vector<std::string> found_ssids;
+std::string roller_options_string;
+bool is_scanning_now = false;
+
+volatile bool wifi_scan_in_progress = false;
+volatile bool wifi_scan_data_ready = false;
+volatile bool wifi_chip_active = false;
+
+volatile bool pn_read_cadr_in_progress = false;
+volatile bool pn_card_uid_ready = false;
+std::vector<uint8_t> uid;
+volatile bool pn_emulate_card_in_progress = false;
+volatile bool is_pn_emulate_btn_clicked = false;
 
 // Железо экрана
-static ST7789 display(5, 4, 3, spi0);
+static ST7789 display(CS_DISP, DC_DISP, RST_DISP, SPI_PORT);
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf[320 * 20];
 static lv_disp_drv_t disp_drv;
@@ -14,98 +37,50 @@ lv_group_t * main_menu_group = NULL;
 lv_group_t * rfid_group = NULL;
 lv_group_t * wifi_group = NULL;
 
-// Переменные ручного счетчика страниц (0 = Home, 1 = RFID, 2 = WiFi)
+// Переменные жесткого контроля страниц (0 = Home, 1 = RFID, 2 = WiFi)
 int current_page = 0;
 static int last_counter_value = 0;
-static bool in_sub_menu = false; // Флаг нахождения внутри подменю
+static bool in_sub_menu = false;
 
-// Чтение и ручная обработка навигации
+// Чтение энкодера с защитой от "убегания" интерфейса
 void encoder_read_cb(lv_indev_drv_t * drv, lv_indev_data_t * data) {
 	int current_counter = counter;
 	int diff = current_counter - last_counter_value;
 	last_counter_value = current_counter;
 
-	// Всегда передаем кручение ручки в LVGL (для внутренних меню)
-	data->enc_diff = diff;
-
-	// Опрашиваем физическое состояние кнопки прямо сейчас (true = кнопка зажата)
-	bool button_is_physically_pressed = (gpio_get(SW) == 0);
-
-	// Статическая переменная, которая помнит, была ли зажата кнопка в ПРЕДЫДУЩЕМ цикле опроса
-	static bool button_was_pressed_last_time = false;
-
-	// 1. НАВИГАЦИЯ ПО ГЛАВНОЙ КАРУСЕЛИ (работает только если мы на главном экране)
-	if (!in_sub_menu && diff != 0) {
-		current_page += diff;
-		if (current_page < 0) current_page = 0;
-		if (current_page > 2) current_page = 2;
-
-		printf("Page Changed! Current Index: %d\n", current_page);
-
-		if (current_page == 0)      lv_obj_scroll_to_y(ui_uiMenuCarousel, 0, LV_ANIM_OFF);
-		else if (current_page == 1) lv_obj_scroll_to_y(ui_uiMenuCarousel, 240, LV_ANIM_OFF);
-		else if (current_page == 2) lv_obj_scroll_to_y(ui_uiMenuCarousel, 480, LV_ANIM_OFF);
-	}
-
-	// 2. УМНАЯ ОБРАБОТКА КНОПКИ (РАЗДЕЛЕНИЕ РЕЖИМОВ)
-	if (!in_sub_menu) {
-		// --- МЫ НА ГЛАВНОМ ЭКРАНЕ ---
-
-		// Провал в подменю делаем строго ПО ОТПУСКАНИЮ кнопки (Клик)
-		// Условие: в прошлый раз кнопка была зажата, а сейчас её физически ОТПУСТИЛИ
-		if (button_was_pressed_last_time && !button_is_physically_pressed) {
-
-			if (current_page == 1) {
-				printf("Action: Failsafe Enter to RFID panel (On Release)\n");
-				in_sub_menu = true;
-
-				// Переключаем энкодер на подменю RFID
-				lv_indev_set_group(indev_encoder, rfid_group);
-				lv_group_focus_obj(ui_BackButton);
-
-				// Сбрасываем флаг прерывания, чтобы не накапливался
-				button_pressed = false;
-
-				// ВАЖНО: Принудительно говорим LVGL, что кнопка сейчас ОТПУЩЕНА,
-				// чтобы он случайно не кликнул по кнопке Back в новом меню!
-				data->state = LV_INDEV_STATE_REL;
-				button_was_pressed_last_time = false;
-				return;
-			}
-			else if (current_page == 2) {
-				printf("Action: Failsafe Enter to WiFi panel (On Release)\n");
-				in_sub_menu = true;
-
-				lv_indev_set_group(indev_encoder, wifi_group);
-				lv_group_focus_obj(ui_BackButtonWiFi);
-
-				button_pressed = false;
-				data->state = LV_INDEV_STATE_REL;
-				button_was_pressed_last_time = false;
-				return;
-			}
-		}
-
-		// Если мы просто держим кнопку на главном экране — ничего не делаем в LVGL
-		data->state = LV_INDEV_STATE_REL;
-
+	if (in_sub_menu) {
+		data->enc_diff = diff; // Внутри подменю работает обычный скролл LVGL
 	} else {
-		// --- МЫ УЖЕ ВНУТРИ ПОДМЕНЮ (RFID или WiFi) ---
+		data->enc_diff = 0; // На главном экране скролл LVGL отключен
 
-		// Здесь мы полностью отдаем кнопку под контроль штатного механизма LVGL.
-		// Если кнопка физически зажата — шлем STATE_PR (Pressed), если отпущена — STATE_REL (Released)
-		if (button_is_physically_pressed) {
-			data->state = LV_INDEV_STATE_PR;
-		} else {
-			data->state = LV_INDEV_STATE_REL;
+		if (diff != 0) {
+			// КРУГОВАЯ НАВИГАЦИЯ
+			if (diff > 0) {
+				current_page++;
+				if (current_page > MAX_PANEL) current_page = 0; // С WiFi (2) переходим на Home (0)
+			} else if (diff < 0) {
+				current_page--;
+				if (current_page < 0) current_page = MAX_PANEL; // С Home (0) переходим на WiFi (2)
+			}
+
+			printf("Switching page to: %d\n", current_page);
+
+			// Сдвигаем карусель
+			lv_obj_scroll_to_y(ui_uiMenuCarousel, current_page * 240, LV_ANIM_OFF);
+
+			// Фокусируем нужную панель
+			if (current_page == 0) lv_group_focus_obj(ui_uiHomePanel);
+			else if (current_page == 1) lv_group_focus_obj(ui_uiRFIDPanel);
+			else if (current_page == 2) lv_group_focus_obj(ui_uiWiFiPanel);
 		}
-
-		// Очищаем фоновый флаг прерывания, чтобы он не выстрелил потом
-		button_pressed = false;
 	}
 
-	// Запоминаем текущее физическое состояние кнопки для следующего кадра (раз в 15-30мс)
-	button_was_pressed_last_time = button_is_physically_pressed;
+	// Состояние кнопки
+	if (gpio_get(SW_ENK) == 0) {
+		data->state = LV_INDEV_STATE_PR;
+	} else {
+		data->state = LV_INDEV_STATE_REL;
+	}
 }
 
 static void my_disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {
@@ -115,23 +90,131 @@ static void my_disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_col
 	lv_disp_flush_ready(disp_drv);
 }
 
-// Универсальный выход из подменю обратно на вертикальную карусель страниц
+// Заход в RFID подменю
+void rfid_panel_click_cb(lv_event_t * e) {
+	printf("Click: Entering RFID sub-menu\n");
+	in_sub_menu = true;
+	lv_indev_set_group(indev_encoder, rfid_group);
+	lv_group_focus_obj(ui_BackButton);
+}
+
+// Заход в WiFi подменю
+void wifi_panel_click_cb(lv_event_t * e) {
+	printf("Click: Entering WiFi sub-menu\n");
+	in_sub_menu = true;
+	lv_indev_set_group(indev_encoder, wifi_group);
+	lv_group_focus_obj(ui_BackButtonWiFi);
+}
+
+// Выход из подменю обратно на карусель
 void back_button_click_cb(lv_event_t * e) {
-	printf("Back to Main Carousel via Button Click!\n");
-
-	in_sub_menu = false; // Возвращаем управление нашему счетчику страниц
-
-	// Переключаем энкодер обратно на глобальную группу
+	printf("Back to Main Menu Carousel\n");
+	in_sub_menu = false;
 	lv_indev_set_group(indev_encoder, main_menu_group);
+
+	if (current_page == 1) lv_group_focus_obj(ui_uiRFIDPanel);
+	else if (current_page == 2) lv_group_focus_obj(ui_uiWiFiPanel);
 }
 
-void search_button_click_cb(lv_event_t * e) {
-	printf("Search button clicked! Starting Wi-Fi Scan...\n");
+// Клик по кнопке Scan
+void scan_button_click_cb(lv_event_t * e) {
+	if (lv_event_get_code(e) != LV_EVENT_CLICKED) return;
 
-	// Вызываем вашу готовую функцию сканирования сети
-	wifi_scan_network();
+	if (!wifi_chip_active) {
+		lv_roller_set_options(ui_NetListRoller, "WiFi not ready", LV_ROLLER_MODE_NORMAL);
+		return;
+	}
+
+	if (!wifi_scan_in_progress) {
+		wifi_scan_in_progress = true;
+		wifi_scan_data_ready = false;
+
+		found_ssids.clear();
+		roller_options_string.clear();
+
+		lv_roller_set_options(ui_NetListRoller, "Scanning...", LV_ROLLER_MODE_NORMAL);
+
+		cyw43_wifi_scan_options_t scan_options = {0};
+
+		int scan_result = cyw43_wifi_scan(
+			&cyw43_state,
+			&scan_options,
+			NULL,
+			work_wifi_scan_result_cb
+		);
+
+		if (scan_result != 0) {
+			wifi_scan_in_progress = false;
+			lv_roller_set_options(ui_NetListRoller, "Scan error", LV_ROLLER_MODE_NORMAL);
+		}
+	}
 }
 
+int work_wifi_scan_result_cb(void *env, const cyw43_ev_scan_result_t *result) {
+	if (!result) return 0;
+
+	if (result->ssid_len == 0) return 0;
+
+	std::string ssid_str(
+		reinterpret_cast<const char*>(result->ssid),
+						 result->ssid_len
+	);
+
+	if (ssid_str.empty()) return 0;
+
+	if (std::find(found_ssids.begin(), found_ssids.end(), ssid_str) == found_ssids.end()) {
+		found_ssids.push_back(ssid_str);
+	}
+
+	return 0;
+}
+
+void update_wifi_roller_from_scan_results(void) {
+	std::sort(found_ssids.begin(), found_ssids.end());
+
+	roller_options_string.clear();
+
+	for (size_t i = 0; i < found_ssids.size(); i++) {
+		if (i > 0) {
+			roller_options_string += "\n";
+		}
+
+		roller_options_string += found_ssids[i];
+	}
+
+	if (!roller_options_string.empty()) {
+		lv_roller_set_options(
+			ui_NetListRoller,
+			roller_options_string.c_str(),
+							  LV_ROLLER_MODE_NORMAL
+		);
+	} else {
+		lv_roller_set_options(
+			ui_NetListRoller,
+			"No networks found",
+			LV_ROLLER_MODE_NORMAL
+		);
+	}
+}
+
+void read_card_button_click_cb(lv_event_t * e) {
+	if (lv_event_get_code(e) != LV_EVENT_CLICKED) return;
+
+	printf("Read card button clicked\n");
+	lv_label_set_text(ui_OutputLabel, "Reading...");
+
+	PN532::scan_in_progress = true;
+	PN532::data_ready = false;
+}
+
+void emulate_card_button_click_cb(lv_event_t * e) {
+	lv_event_code_t code = lv_event_get_code(e);
+
+	if(code == LV_EVENT_CLICKED){
+		//pn_emulate_card_in_progress = true;
+		is_pn_emulate_btn_clicked = true;
+	}
+}
 // Инициализация всего интерфейса
 void setup_all(void) {
 	display.begin();
@@ -145,120 +228,63 @@ void setup_all(void) {
 	disp_drv.draw_buf = &draw_buf;
 	lv_disp_drv_register(&disp_drv);
 
-	// Инициализация автокода SquareLine и железного энкодера
 	ui_init();
 	encoder_init();
 
-	// Настройка устройства ввода в LVGL
 	static lv_indev_drv_t indev_drv;
 	lv_indev_drv_init(&indev_drv);
 	indev_drv.type = LV_INDEV_TYPE_ENCODER;
 	indev_drv.read_cb = encoder_read_cb;
 	indev_encoder = lv_indev_drv_register(&indev_drv);
 
-	// Создаем группы управления
 	main_menu_group = lv_group_create();
 	rfid_group      = lv_group_create();
 	wifi_group      = lv_group_create();
 
-	// Добавляем саму карусель в главную группу для поддержания структуры опроса
-	lv_group_add_obj(main_menu_group, ui_uiMenuCarousel);
-
-	// --- Настройка стилей обводки контура (Неоновая рамка фокуса для кнопок) ---
+	// Неоновые рамки фокуса
 	static lv_style_t style_focused;
 	lv_style_init(&style_focused);
-	lv_style_set_border_width(&style_focused, 3); // 3 пикселя толщина
-	lv_style_set_border_color(&style_focused, lv_color_hex(0x00D9FF)); // Голубой неон
+	lv_style_set_border_width(&style_focused, 3);
+	lv_style_set_border_color(&style_focused, lv_color_hex(0x00D9FF));
 	lv_style_set_border_opa(&style_focused, LV_OPA_COVER);
 
-	// Применяем обводку к реальным кнопкам Назад
+	lv_obj_add_style(ui_uiHomePanel, &style_focused, LV_STATE_FOCUSED);
+	lv_obj_add_style(ui_uiRFIDPanel, &style_focused, LV_STATE_FOCUSED);
+	lv_obj_add_style(ui_uiWiFiPanel, &style_focused, LV_STATE_FOCUSED);
 	lv_obj_add_style(ui_BackButton, &style_focused, LV_STATE_FOCUSED);
-	lv_obj_add_style(ui_BackButtonWiFi, &style_focused, LV_STATE_FOCUSED);
-
-	// --- Группа подменю RFID ---
-	lv_group_add_obj(rfid_group, ui_BackButton);
-	lv_group_add_obj(rfid_group, ui_OnButton);    // ДОБАВЬТЕ ЭТУ КНОПКУ (Включение RFID)
-	lv_group_add_obj(rfid_group, ui_OffButton);   // ДОБАВЬТЕ ЭТУ КНОПКУ (Выключение RFID)
-	lv_group_add_obj(rfid_group, ui_SearchButton);// ДОБАВЬТЕ ЭТУ КНОПКУ (Поиск)
-
-	// Применяем неоновый стиль фокуса ко ВСЕМ кнопкам в меню, чтобы видеть куда крутим
-	lv_obj_add_style(ui_BackButton, &style_focused, LV_STATE_FOCUSED);
-	lv_obj_add_style(ui_OnButton, &style_focused, LV_STATE_FOCUSED);
-	lv_obj_add_style(ui_OffButton, &style_focused, LV_STATE_FOCUSED);
 	lv_obj_add_style(ui_SearchButton, &style_focused, LV_STATE_FOCUSED);
-
-	lv_obj_add_event_cb(ui_BackButton, back_button_click_cb, LV_EVENT_CLICKED, NULL);
-
-
-	// --- Группа подменю WiFi ---
-	lv_group_add_obj(wifi_group, ui_BackButtonWiFi);
-	lv_group_add_obj(wifi_group, ui_OnButtonWiFi);  // ДОБАВЬТЕ КНОПКУ ВКЛЮЧЕНИЯ WIFI
-	lv_group_add_obj(wifi_group, ui_OffButtonWiFi); // ДОБАВЬТЕ КНОПКУ ВЫКЛЮЧЕНИЯ WIFI
-
 	lv_obj_add_style(ui_BackButtonWiFi, &style_focused, LV_STATE_FOCUSED);
-	lv_obj_add_style(ui_OnButtonWiFi, &style_focused, LV_STATE_FOCUSED);
-	lv_obj_add_style(ui_OffButtonWiFi, &style_focused, LV_STATE_FOCUSED);
+	lv_obj_add_style(ui_ScanWiFiBut, &style_focused, LV_STATE_FOCUSED);
+	lv_obj_add_style(ui_NetListRoller, &style_focused, LV_STATE_FOCUSED);
 
+	// Навешивание элементов на группы
+	lv_group_add_obj(main_menu_group, ui_uiHomePanel);
+	lv_group_add_obj(main_menu_group, ui_uiRFIDPanel);
+	lv_group_add_obj(main_menu_group, ui_uiWiFiPanel);
+	lv_obj_add_event_cb(ui_uiRFIDPanel, rfid_panel_click_cb, LV_EVENT_CLICKED, NULL);
+	lv_obj_add_event_cb(ui_uiWiFiPanel, wifi_panel_click_cb, LV_EVENT_CLICKED, NULL);
+
+	lv_group_add_obj(rfid_group, ui_BackButton);
+	lv_group_add_obj(rfid_group, ui_SearchButton);
+	lv_obj_add_event_cb(ui_BackButton, back_button_click_cb, LV_EVENT_CLICKED, NULL);
+	lv_obj_add_event_cb(ui_SearchButton, read_card_button_click_cb, LV_EVENT_CLICKED, NULL);
+
+	lv_group_add_obj(wifi_group, ui_BackButtonWiFi);
+	lv_group_add_obj(wifi_group, ui_ScanWiFiBut);
+	lv_group_add_obj(wifi_group, ui_NetListRoller);
 	lv_obj_add_event_cb(ui_BackButtonWiFi, back_button_click_cb, LV_EVENT_CLICKED, NULL);
-	lv_obj_add_event_cb(ui_SearchButton, search_button_click_cb, LV_EVENT_CLICKED, NULL);
-	// -------------------------------------------------------------------------
-	// НАСТРОЙКА СТАРТА ГЕОМЕТРИИ (ДЛЯ COLUMN ВЕРТИКАЛИ)
-	// -------------------------------------------------------------------------
-	lv_obj_set_scroll_dir(ui_uiMenuCarousel, LV_DIR_NONE); // Полностью отключаем автоскролл
+	lv_obj_add_event_cb(ui_ScanWiFiBut, scan_button_click_cb, LV_EVENT_CLICKED, NULL);
+
+	// Стартовая геометрия
+	lv_obj_set_scroll_dir(ui_uiMenuCarousel, LV_DIR_NONE);
 	lv_obj_set_style_anim_time(ui_uiMenuCarousel, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-	// Принудительно обновляем COLUMN-сетку, чтобы рассчитать новые координаты Y
 	lv_obj_update_layout(ui_uiMenuCarousel);
-
-	// Сбрасываем вертикальный скролл на 0 (Home Panel сверху)
 	lv_obj_scroll_to_y(ui_uiMenuCarousel, 0, LV_ANIM_OFF);
 
-	// Запуск
+	lv_indev_set_group(indev_encoder, main_menu_group);
+	lv_group_focus_obj(ui_uiHomePanel);
+
 	current_page = 0;
 	in_sub_menu = false;
-	button_pressed = false;
-	lv_indev_set_group(indev_encoder, main_menu_group);
-
-	printf("Setup complete. Vertical layout synchronized.\n");
+	is_scanning_now = false;
 }
-
-
-int scan_result_cb(void *env, const cyw43_ev_scan_result_t *result) {
-	if (result) {
-		printf("SSID: %-32s | RSSI: %4d | Channel: %3d\n",
-			   result->ssid, result->rssi, result->channel);
-	}
-	return 0;
-}
-
-void wifi_scan_network() {
-	printf("Initializing Wi-Fi chip...\n");
-
-	// Пытаемся инициализировать
-	int init_res = cyw43_arch_init();
-	if (init_res != 0) {
-		printf("Failed to initialize CYW43: %d\n", init_res);
-		return; // Если тут ошибка, дальше идти нет смысла
-	}
-
-	cyw43_arch_enable_sta_mode();
-	printf("Wi-Fi init success, mode STA enabled.\n");
-
-	// Даем время чипу "проснуться"
-	sleep_ms(500);
-
-	while (true) {
-		if (!cyw43_wifi_scan_active(&cyw43_state)) {
-			cyw43_wifi_scan_options_t scan_options = {0};
-			int err = cyw43_wifi_scan(&cyw43_state, &scan_options, NULL, scan_result_cb);
-
-			if (err == 0) {
-				printf("Scan started...\n");
-			} else {
-				printf("Scan error: %d\n", err);
-			}
-		}
-		sleep_ms(10000);
-	}
-}
-

@@ -1,6 +1,6 @@
 #ifndef _LWIPOPTS_H
 #define _LWIPOPTS_H
-
+#include <stdint.h>
 // Основные настройки для Pico W / Pico 2 W
 #define NO_SYS                      1
 #define LWIP_SOCKET                 0
@@ -31,6 +31,22 @@
 #define LWIP_DNS                    1
 #define LWIP_TCP_KEEPALIVE          1
 #define MEMP_NUM_SYS_TIMEOUT        10
+
+//-------- for SNTP server -------
+#define LWIP_SNTP 1
+#define SNTP_SERVER_DNS 1
+#define SNTP_SERVER_ADDRESS "pool.ntp.org"
+#define SNTP_UPDATE_DELAY 3600000
+#define SNTP_SET_SYSTEM_TIME(sec) set_time_bootstrap(sec)
+
+// Объявим прототип функции, которую мы напишем в main.cpp
+#ifdef __cplusplus
+extern "C" {
+	#endif
+	void set_time_bootstrap(uint32_t sec);
+	#ifdef __cplusplus
+}
+#endif
 
 // Для режима фоновой работы (threadsafe_background)
 #define PICO_CYW43_ARCH_THREADSAFE_BACKGROUND 1
