@@ -5,8 +5,6 @@
 
 #define AHT20_ADDR 0x38
 #define BMP280_ADDR 0x76
-#define I2C_PORT i2c0
-
 
 
 class Sensor{
@@ -15,9 +13,6 @@ class Sensor{
 		float press;
 		float hum;
 		int sda, scl;
-
-
-
 	public:
 		Sensor(int SDA, int SCL);
 		//----I2C handle----

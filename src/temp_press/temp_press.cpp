@@ -1,7 +1,8 @@
-#include "include/temp_press.h"
+#include "temp_press.h"
 
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
+#include "../../pins.h"
 
 //calib coef
 uint16_t dig_T1;

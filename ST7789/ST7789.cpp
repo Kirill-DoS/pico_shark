@@ -1,7 +1,7 @@
 #include "ST7789.h"
 #include <cinttypes>
 #include <cstdint>
-
+#include "../pins.h"
 ST7789::ST7789(uint cs, uint dc, uint rst, spi_inst_t* spi)
 : PicoGFX(SCREEN_WIDTH, SCREEN_HEIGHT), _cs(cs), _dc(dc), _rst(rst), _spi(spi) {}
 
@@ -10,9 +10,9 @@ void ST7789::begin() {
     gpio_init(_dc); gpio_set_dir(_dc, GPIO_OUT);
     gpio_init(_rst); gpio_set_dir(_rst, GPIO_OUT);
 
-    spi_init(_spi, 10000000); // ↓ СНИЗИЛИ до 10 МГц для стабильности!
-    gpio_set_function(MOSI, GPIO_FUNC_SPI); // MOSI
-    gpio_set_function(SCK, GPIO_FUNC_SPI); // SCK
+    spi_init(_spi, 62000000); // ↓ СНИЗИЛИ до 10 МГц для стабильности!
+    gpio_set_function(SDA_DISP, GPIO_FUNC_SPI); // MOSI
+    gpio_set_function(SCL_DISP, GPIO_FUNC_SPI); // SCK
     gpio_set_function(MISO, GPIO_FUNC_SPI); // MISO (для стабильности шины)
 
     // Сброс

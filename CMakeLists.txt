@@ -35,16 +35,19 @@ add_executable(pico_shark
     ST7789/PicoGFX.cpp
     ST7789/ST7789.cpp
     setup.cpp
-    #src/onewire_library.cpp
-    src/enkoder.cpp
-    src/temp_press.cpp
-    #src/ds18b20.cpp
+    src/enkoder/enkoder.cpp
+    src/temp_press/temp_press.cpp
+    src/pn532/pn532.cpp
 )
 
 pico_enable_stdio_usb(pico_shark 1)
+pico_enable_stdio_uart(pico_shark 0)
+# generate pio header file
+# pico_generate_pio_header(nec_receive_library ${CMAKE_CURRENT_LIST_DIR}/nec_receive.pio)
+# pico_generate_pio_header(nec_receive_library ${CMAKE_CURRENT_LIST_DIR}/nec_receive.pio)
+# pico_generate_pio_header(nec_transmit_library ${CMAKE_CURRENT_LIST_DIR}/nec_carrier_burst.pio)
+# pico_generate_pio_header(nec_transmit_library ${CMAKE_CURRENT_LIST_DIR}/nec_carrier_control.pio)
 
-#pico_generate_pio_header(pico_shark ${CMAKE_CURRENT_LIST_DIR}/src/pio/onewire_library.pio)
-#pico_generate_pio_header(pico_shark ${CMAKE_CURRENT_LIST_DIR}/src/pio/DS18B20.pio)
 
 target_link_libraries(pico_shark PRIVATE
     pico_stdlib
@@ -53,6 +56,7 @@ target_link_libraries(pico_shark PRIVATE
     hardware_dma
     hardware_spi
     hardware_i2c
+    hardware_uart
     lvgl
     ui
     pico_cyw43_arch_lwip_threadsafe_background

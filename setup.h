@@ -2,15 +2,20 @@
 #include "ST7789/ST7789.h"
 #include "lvgl/lvgl.h"
 #include "ui/ui.h"
-#include "src/include/enkoder.h"
+
+#include "src/enkoder/enkoder.h"
+#include "src/pn532/pn532.h"
 #include "pico/cyw43_arch.h"
 
+#include <cstdint>
 #include <string>
+#include <vector>
 
 #define MAX_PANEL 2
 
+// WiFi state
+extern volatile bool wifi_chip_active;
 extern bool is_scanning_now;
-
 extern volatile bool wifi_scan_in_progress;
 extern volatile bool wifi_scan_data_ready;
 
@@ -31,10 +36,11 @@ void rfid_panel_click_cb(lv_event_t * e);
 void wifi_panel_click_cb(lv_event_t * e);
 void back_button_click_cb(lv_event_t * e);
 void scan_button_click_cb(lv_event_t * e);
-void read_button_click_cb(lv_event_t * e);
+void read_card_button_click_cb(lv_event_t * e);
+void emulate_card_button_click_cb(lv_event_t * e);
 
 // for WiFi chip
-extern volatile bool wifi_scan_finished;
+void update_wifi_roller_from_scan_results(void);
 extern std::string roller_options_string;
 extern lv_obj_t * ui_NetListRoller;
 extern volatile bool wifi_chip_active;

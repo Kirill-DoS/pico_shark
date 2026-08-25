@@ -2,9 +2,11 @@
 #include "lvgl/src/core/lv_event.h"
 #include "lvgl/src/core/lv_group.h"
 #include "pico/stdlib.h"
+#include "pins.h"
+#include "src/pn532/pn532.h"
 #include "ui/screens/ui_Screen1.h"
 #include <stdio.h>
-
+#include "pins.h"
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -15,9 +17,16 @@ bool is_scanning_now = false;
 
 volatile bool wifi_scan_in_progress = false;
 volatile bool wifi_scan_data_ready = false;
+volatile bool wifi_chip_active = false;
+
+volatile bool pn_read_cadr_in_progress = false;
+volatile bool pn_card_uid_ready = false;
+std::vector<uint8_t> uid;
+volatile bool pn_emulate_card_in_progress = false;
+volatile bool is_pn_emulate_btn_clicked = false;
 
 // Железо экрана
-static ST7789 display(5, 4, 3, spi0);
+static ST7789 display(CS_DISP, DC_DISP, RST_DISP, SPI_PORT);
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf[320 * 20];
 static lv_disp_drv_t disp_drv;
@@ -67,7 +76,7 @@ void encoder_read_cb(lv_indev_drv_t * drv, lv_indev_data_t * data) {
 	}
 
 	// Состояние кнопки
-	if (gpio_get(SW) == 0) {
+	if (gpio_get(SW_ENK) == 0) {
 		data->state = LV_INDEV_STATE_PR;
 	} else {
 		data->state = LV_INDEV_STATE_REL;
@@ -109,30 +118,103 @@ void back_button_click_cb(lv_event_t * e) {
 
 // Клик по кнопке Scan
 void scan_button_click_cb(lv_event_t * e) {
+	if (lv_event_get_code(e) != LV_EVENT_CLICKED) return;
+
+	if (!wifi_chip_active) {
+		lv_roller_set_options(ui_NetListRoller, "WiFi not ready", LV_ROLLER_MODE_NORMAL);
+		return;
+	}
+
+	if (!wifi_scan_in_progress) {
+		wifi_scan_in_progress = true;
+		wifi_scan_data_ready = false;
+
+		found_ssids.clear();
+		roller_options_string.clear();
+
+		lv_roller_set_options(ui_NetListRoller, "Scanning...", LV_ROLLER_MODE_NORMAL);
+
+		cyw43_wifi_scan_options_t scan_options = {0};
+
+		int scan_result = cyw43_wifi_scan(
+			&cyw43_state,
+			&scan_options,
+			NULL,
+			work_wifi_scan_result_cb
+		);
+
+		if (scan_result != 0) {
+			wifi_scan_in_progress = false;
+			lv_roller_set_options(ui_NetListRoller, "Scan error", LV_ROLLER_MODE_NORMAL);
+		}
+	}
+}
+
+int work_wifi_scan_result_cb(void *env, const cyw43_ev_scan_result_t *result) {
+	if (!result) return 0;
+
+	if (result->ssid_len == 0) return 0;
+
+	std::string ssid_str(
+		reinterpret_cast<const char*>(result->ssid),
+						 result->ssid_len
+	);
+
+	if (ssid_str.empty()) return 0;
+
+	if (std::find(found_ssids.begin(), found_ssids.end(), ssid_str) == found_ssids.end()) {
+		found_ssids.push_back(ssid_str);
+	}
+
+	return 0;
+}
+
+void update_wifi_roller_from_scan_results(void) {
+	std::sort(found_ssids.begin(), found_ssids.end());
+
+	roller_options_string.clear();
+
+	for (size_t i = 0; i < found_ssids.size(); i++) {
+		if (i > 0) {
+			roller_options_string += "\n";
+		}
+
+		roller_options_string += found_ssids[i];
+	}
+
+	if (!roller_options_string.empty()) {
+		lv_roller_set_options(
+			ui_NetListRoller,
+			roller_options_string.c_str(),
+							  LV_ROLLER_MODE_NORMAL
+		);
+	} else {
+		lv_roller_set_options(
+			ui_NetListRoller,
+			"No networks found",
+			LV_ROLLER_MODE_NORMAL
+		);
+	}
+}
+
+void read_card_button_click_cb(lv_event_t * e) {
+	if (lv_event_get_code(e) != LV_EVENT_CLICKED) return;
+
+	printf("Read card button clicked\n");
+	lv_label_set_text(ui_OutputLabel, "Reading...");
+
+	PN532::scan_in_progress = true;
+	PN532::data_ready = false;
+}
+
+void emulate_card_button_click_cb(lv_event_t * e) {
 	lv_event_code_t code = lv_event_get_code(e);
 
 	if(code == LV_EVENT_CLICKED){
-		if(!wifi_scan_in_progress){
-			wifi_scan_in_progress = true;
-			wifi_scan_data_ready = false;
-
-			roller_options_string.clear();
-			cyw43_wifi_scan_options_t scan_options = {0};
-			cyw43_wifi_scan(&cyw43_state, &scan_options, NULL, work_wifi_scan_result_cb);
-		}
+		//pn_emulate_card_in_progress = true;
+		is_pn_emulate_btn_clicked = true;
 	}
-	// if (is_scanning_now) return;
- //
-	// printf("Scan button triggered!\n");
-	// is_scanning_now = true;
- //
-	// // Выводим текст ожидания в роллер
-	// lv_roller_set_options(ui_NetListRoller, "Scanning...\nPlease wait...", LV_ROLLER_MODE_NORMAL);
-	// lv_obj_invalidate(ui_NetListRoller);
- //
-	// wifi_scan_network();
 }
-
 // Инициализация всего интерфейса
 void setup_all(void) {
 	display.begin();
@@ -185,6 +267,7 @@ void setup_all(void) {
 	lv_group_add_obj(rfid_group, ui_BackButton);
 	lv_group_add_obj(rfid_group, ui_SearchButton);
 	lv_obj_add_event_cb(ui_BackButton, back_button_click_cb, LV_EVENT_CLICKED, NULL);
+	lv_obj_add_event_cb(ui_SearchButton, read_card_button_click_cb, LV_EVENT_CLICKED, NULL);
 
 	lv_group_add_obj(wifi_group, ui_BackButtonWiFi);
 	lv_group_add_obj(wifi_group, ui_ScanWiFiBut);
@@ -205,72 +288,3 @@ void setup_all(void) {
 	in_sub_menu = false;
 	is_scanning_now = false;
 }
-
-// Обработчик результатов Wi-Fi
-// int scan_result_cb(void *env, const cyw43_ev_scan_result_t *result) {
-// 	if (result) {
-// 		if (result->ssid_len > 32 || result->ssid_len == 0) return 0;
-//
-// 		char safe_ssid[33];
-// 		memset(safe_ssid, 0, sizeof(safe_ssid));
-// 		memcpy(safe_ssid, result->ssid, result->ssid_len);
-// 		std::string name(safe_ssid);
-// 		if (name.empty()) name = "[Hidden]";
-//
-// 		if (std::find(found_ssids.begin(), found_ssids.end(), name) == found_ssids.end()) {
-// 			found_ssids.push_back(name);
-// 			printf("Found Wi-Fi: %s\n", name.c_str());
-// 		}
-// 	} else {
-// 		printf("Scan finished. Formatting options...\n");
-// 		roller_options_string = "";
-// 		for (const auto& s : found_ssids) {
-// 			roller_options_string += s + "\n";
-// 		}
-// 		if (!roller_options_string.empty()) {
-// 			roller_options_string.pop_back();
-// 		} else {
-// 			roller_options_string = "No networks found";
-// 		}
-// 	}
-// 	return 0;
-// }
-
-int work_wifi_scan_result_cb(void *env, const cyw43_ev_scan_result_t *result){
-	if(!result) return 0;
-
-	std::string ssid_str(reinterpret_cast<const char*>(result->ssid));
-
-	if(ssid_str.empty()) return 0;
-
-	if(roller_options_string.find(ssid_str) == std::string::npos){
-		if(!roller_options_string.empty()){
-			roller_options_string += "\n";
-		}
-
-		roller_options_string +=ssid_str;
-	}
-	return 0;
-}
-
-// void wifi_scan_network() {
-// 	printf("Starting Wi-Fi scan process...\n");
-// 	found_ssids.clear();
-//
-// 	int init_res = cyw43_arch_init();
-// 	if (init_res != 0) {
-// 		printf("Failed to init CYW43: %d\n", init_res);
-// 		is_scanning_now = false;
-// 		return;
-// 	}
-//
-// 	cyw43_arch_enable_sta_mode();
-// 	cyw43_wifi_scan_options_t scan_options = {0};
-// 	int err = cyw43_wifi_scan(&cyw43_state, &scan_options, NULL, scan_result_cb);
-//
-// 	if (err < 0) {
-// 		printf("Scan trigger failed: %d. Cleaning up...\n", err);
-// 		cyw43_arch_deinit();
-// 		is_scanning_now = false;
-// 	}
-// }

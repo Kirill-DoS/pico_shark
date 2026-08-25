@@ -3,10 +3,6 @@
 
 #include "pico/stdlib.h"
 
-#define SW  17
-#define DT 16
-#define CLK 15
-
 extern volatile int counter;
 extern volatile bool button_pressed;
 extern volatile bool last_state_A;
