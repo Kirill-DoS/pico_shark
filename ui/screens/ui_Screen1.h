@@ -29,18 +29,35 @@ extern lv_obj_t * ui_PressValLabel;
 extern lv_obj_t * ui_uiRFIDPanel;
 extern lv_obj_t * ui_BackButton;
 extern lv_obj_t * ui_BackLabel;
-extern lv_obj_t * ui_SearchButton;
+extern lv_obj_t * ui_ReadBtn;
 extern lv_obj_t * ui_SearchLabel;
-extern lv_obj_t * ui_OutputLabel;
+extern lv_obj_t * ui_RFIDTagLabel;
+extern lv_obj_t * ui_EmulateBtn;
+extern lv_obj_t * ui_EmulateLabel;
+extern lv_obj_t * ui_TagSelectRoller;
 extern lv_obj_t * ui_uiWiFiPanel;
 extern lv_obj_t * ui_BackButtonWiFi;
 extern lv_obj_t * ui_BackLabelWiFI;
 extern lv_obj_t * ui_ScanWiFiBut;
 extern lv_obj_t * ui_ScanWiFiLabel;
-extern lv_obj_t * ui_NetLabel;
 extern lv_obj_t * ui_NetListRoller;
+extern lv_obj_t * ui_PortScanBtn;
+extern lv_obj_t * ui_PortScanLabel;
+extern lv_obj_t * ui_EvilTwinBtn;
+extern lv_obj_t * ui_EvilTwinLabel;
+extern lv_obj_t * ui_StartBtn;
+extern lv_obj_t * ui_StartLabel;
+extern lv_obj_t * ui_uiBTPanel;
+extern lv_obj_t * ui_BLEBackBtn;
+extern lv_obj_t * ui_BLEBackLabel;
+extern lv_obj_t * ui_BLEFloodBtn;
+extern lv_obj_t * ui_BLEFloodLabel;
+extern lv_obj_t * ui_BTHIDBtn;
+extern lv_obj_t * ui_BTIDdLabel;
+extern lv_obj_t * ui_BTScan;
+extern lv_obj_t * ui_BTScanLabel;
+extern lv_obj_t * ui_BLEDataRoller;
 // CUSTOM VARIABLES
-extern lv_obj_t * uic_NetListRoller;
 
 #ifdef __cplusplus
 } /*extern "C"*/
