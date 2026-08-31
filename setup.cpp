@@ -35,9 +35,10 @@ static lv_disp_drv_t disp_drv;
 lv_indev_t * indev_encoder = NULL;
 lv_group_t * main_menu_group = NULL;
 lv_group_t * rfid_group = NULL;
-lv_group_t * wifi_group = NULL;
+lv_group_t * wifi_group = NULL; 
+lv_group_t * bt_group = NULL;
 
-// Переменные жесткого контроля страниц (0 = Home, 1 = RFID, 2 = WiFi)
+// Переменные жесткого контроля страниц (0 = Home, 1 = RFID, 2 = WiFi, 3 = BT)
 int current_page = 0;
 static int last_counter_value = 0;
 static bool in_sub_menu = false;
@@ -72,6 +73,7 @@ void encoder_read_cb(lv_indev_drv_t * drv, lv_indev_data_t * data) {
 			if (current_page == 0) lv_group_focus_obj(ui_uiHomePanel);
 			else if (current_page == 1) lv_group_focus_obj(ui_uiRFIDPanel);
 			else if (current_page == 2) lv_group_focus_obj(ui_uiWiFiPanel);
+			else if (current_page == 3) lv_group_focus_obj(ui_uiBTPanel);
 		}
 	}
 
@@ -106,6 +108,13 @@ void wifi_panel_click_cb(lv_event_t * e) {
 	lv_group_focus_obj(ui_BackButtonWiFi);
 }
 
+void bt_panel_click_cb(lv_event_t * e) {
+	printf("Click: Entering BT sub-menu\n");
+	in_sub_menu = true;
+	lv_indev_set_group(indev_encoder, bt_group);
+	lv_group_focus_obj(ui_BLEBackBtn);
+}
+
 // Выход из подменю обратно на карусель
 void back_button_click_cb(lv_event_t * e) {
 	printf("Back to Main Menu Carousel\n");
@@ -114,6 +123,7 @@ void back_button_click_cb(lv_event_t * e) {
 
 	if (current_page == 1) lv_group_focus_obj(ui_uiRFIDPanel);
 	else if (current_page == 2) lv_group_focus_obj(ui_uiWiFiPanel);
+	else if (current_page == 3) lv_group_focus_obj(ui_uiBTPanel);
 }
 
 // Клик по кнопке Scan
@@ -201,7 +211,7 @@ void read_card_button_click_cb(lv_event_t * e) {
 	if (lv_event_get_code(e) != LV_EVENT_CLICKED) return;
 
 	printf("Read card button clicked\n");
-	lv_label_set_text(ui_OutputLabel, "Reading...");
+	lv_label_set_text(ui_RFIDTagLabel, "Reading...");
 
 	PN532::scan_in_progress = true;
 	PN532::data_ready = false;
@@ -240,6 +250,7 @@ void setup_all(void) {
 	main_menu_group = lv_group_create();
 	rfid_group      = lv_group_create();
 	wifi_group      = lv_group_create();
+	bt_group 		= lv_group_create();
 
 	// Неоновые рамки фокуса
 	static lv_style_t style_focused;
@@ -248,33 +259,62 @@ void setup_all(void) {
 	lv_style_set_border_color(&style_focused, lv_color_hex(0x00D9FF));
 	lv_style_set_border_opa(&style_focused, LV_OPA_COVER);
 
-	lv_obj_add_style(ui_uiHomePanel, &style_focused, LV_STATE_FOCUSED);
-	lv_obj_add_style(ui_uiRFIDPanel, &style_focused, LV_STATE_FOCUSED);
-	lv_obj_add_style(ui_uiWiFiPanel, &style_focused, LV_STATE_FOCUSED);
+	// add style for panels
+	lv_obj_add_style(ui_uiHomePanel, &style_focused, LV_STATE_FOCUSED); // home panel
+	lv_obj_add_style(ui_uiRFIDPanel, &style_focused, LV_STATE_FOCUSED); // RFID panel
+	lv_obj_add_style(ui_uiWiFiPanel, &style_focused, LV_STATE_FOCUSED); // WiFi panel
+	lv_obj_add_style(ui_uiBTPanel, &style_focused, LV_STATE_FOCUSED);   // BT panel
+	// add style for UI elements
+	// rfid panel
 	lv_obj_add_style(ui_BackButton, &style_focused, LV_STATE_FOCUSED);
-	lv_obj_add_style(ui_SearchButton, &style_focused, LV_STATE_FOCUSED);
+	lv_obj_add_style(ui_ReadBtn, &style_focused, LV_STATE_FOCUSED);
+	lv_obj_add_style(ui_EmulateBtn, &style_focused, LV_STATE_FOCUSED);
+	lv_obj_add_style(ui_TagSelectRoller, &style_focused, LV_STATE_FOCUSED);
+	// wifi panel
 	lv_obj_add_style(ui_BackButtonWiFi, &style_focused, LV_STATE_FOCUSED);
 	lv_obj_add_style(ui_ScanWiFiBut, &style_focused, LV_STATE_FOCUSED);
 	lv_obj_add_style(ui_NetListRoller, &style_focused, LV_STATE_FOCUSED);
+	lv_obj_add_style(ui_EvilTwinBtn, &style_focused, LV_STATE_FOCUSED);
+	lv_obj_add_style(ui_PortScanBtn, &style_focused, LV_STATE_FOCUSED);
+	lv_obj_add_style(ui_StartBtn, &style_focused, LV_STATE_FOCUSED);
+	// bt panel
+	lv_obj_add_style(ui_BLEBackBtn, &style_focused, LV_STATE_FOCUSED);
+	lv_obj_add_style(ui_BLEDataRoller, &style_focused, LV_STATE_FOCUSED);
+	lv_obj_add_style(ui_BLEFloodBtn, &style_focused, LV_STATE_FOCUSED);
+	lv_obj_add_style(ui_BTHIDBtn, &style_focused, LV_STATE_FOCUSED);
+	lv_obj_add_style(ui_BTScan, &style_focused, LV_STATE_FOCUSED);
 
 	// Навешивание элементов на группы
 	lv_group_add_obj(main_menu_group, ui_uiHomePanel);
 	lv_group_add_obj(main_menu_group, ui_uiRFIDPanel);
 	lv_group_add_obj(main_menu_group, ui_uiWiFiPanel);
+	lv_group_add_obj(main_menu_group, ui_uiBTPanel);
 	lv_obj_add_event_cb(ui_uiRFIDPanel, rfid_panel_click_cb, LV_EVENT_CLICKED, NULL);
 	lv_obj_add_event_cb(ui_uiWiFiPanel, wifi_panel_click_cb, LV_EVENT_CLICKED, NULL);
+	lv_obj_add_event_cb(ui_uiBTPanel, bt_panel_click_cb, LV_EVENT_CLICKED, NULL);
 
 	lv_group_add_obj(rfid_group, ui_BackButton);
-	lv_group_add_obj(rfid_group, ui_SearchButton);
+	lv_group_add_obj(rfid_group, ui_ReadBtn);
+	lv_group_add_obj(rfid_group, ui_EmulateBtn);
+	lv_group_add_obj(rfid_group, ui_TagSelectRoller);
 	lv_obj_add_event_cb(ui_BackButton, back_button_click_cb, LV_EVENT_CLICKED, NULL);
-	lv_obj_add_event_cb(ui_SearchButton, read_card_button_click_cb, LV_EVENT_CLICKED, NULL);
+	lv_obj_add_event_cb(ui_ReadBtn, read_card_button_click_cb, LV_EVENT_CLICKED, NULL);
 
 	lv_group_add_obj(wifi_group, ui_BackButtonWiFi);
 	lv_group_add_obj(wifi_group, ui_ScanWiFiBut);
 	lv_group_add_obj(wifi_group, ui_NetListRoller);
+	lv_group_add_obj(wifi_group, ui_EvilTwinBtn);
+	lv_group_add_obj(wifi_group, ui_PortScanBtn);
 	lv_obj_add_event_cb(ui_BackButtonWiFi, back_button_click_cb, LV_EVENT_CLICKED, NULL);
 	lv_obj_add_event_cb(ui_ScanWiFiBut, scan_button_click_cb, LV_EVENT_CLICKED, NULL);
 
+	lv_group_add_obj(bt_group, ui_BLEBackBtn);
+	lv_group_add_obj(bt_group, ui_BLEDataRoller);
+	lv_group_add_obj(bt_group, ui_BLEFloodBtn);
+	lv_group_add_obj(bt_group, ui_BTHIDBtn);
+	lv_group_add_obj(bt_group, ui_BTScan);
+	lv_obj_add_event_cb(ui_BLEBackBtn, back_button_click_cb, LV_EVENT_CLICKED, NULL);
+	
 	// Стартовая геометрия
 	lv_obj_set_scroll_dir(ui_uiMenuCarousel, LV_DIR_NONE);
 	lv_obj_set_style_anim_time(ui_uiMenuCarousel, 0, LV_PART_MAIN | LV_STATE_DEFAULT);

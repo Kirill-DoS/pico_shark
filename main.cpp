@@ -161,7 +161,7 @@ int main() {
                 for (uint8_t i = 0; i < uidLength && pos < 28; i++) {
                     pos += snprintf(uid_str + pos, sizeof(uid_str) - pos, "%02X ", uid[i]);
                 }
-                lv_label_set_text(ui_OutputLabel, uid_str);
+                lv_label_set_text(ui_RFIDTagLabel, uid_str);
 
                 sleep_ms(1000); // защита от повторного срабатывания той же карты
             } else {
@@ -169,7 +169,7 @@ int main() {
                 // НЕ нашли — обязательная пауза перед следующей попыткой
                 sleep_ms(200);
                 PN532::scan_in_progress = false;
-                lv_label_set_text(ui_OutputLabel, "card not detected");
+                lv_label_set_text(ui_RFIDTagLabel, "card not detected");
             }
             printf("exit\n");
         }
